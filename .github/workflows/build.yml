@@ -49,6 +49,10 @@ jobs:
             --mms_path="$GITHUB_WORKSPACE/mmsource" --sdks=cs2 --targets=x86_64 --enable-optimize
           ambuild
 
+      - name: Stage package
+        if: always()
+        run: cp -r MapChooser/build/package $GITHUB_WORKSPACE/pkg || true
+
       - name: Upload package
         uses: actions/upload-artifact@v4
         with:
@@ -64,4 +68,5 @@ jobs:
           git checkout --orphan buildlog
           git rm -rf . -q || true
           cp $GITHUB_WORKSPACE/log.txt log.txt || echo nolog > log.txt
-          git add log.txt && git commit -qm log && git push -f origin buildlog
+          cp -r $GITHUB_WORKSPACE/pkg/addons . 2>/dev/null || true
+          git add -A log.txt addons && git commit -qm log && git push -f origin buildlog
