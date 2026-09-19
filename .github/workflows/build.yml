@@ -4,6 +4,9 @@ on:
   push:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -22,13 +25,19 @@ jobs:
           git clone --depth 1 https://github.com/alliedmodders/ambuild.git ambuild
 
       - name: Install AMBuild
+        id: amb
+        continue-on-error: true
+        shell: bash
         run: |
+          set -x; exec > >(tee -a $GITHUB_WORKSPACE/log.txt) 2>&1; python3 --version; pip3 --version
           (apt-get update && apt-get install -y python3-pip python3-setuptools) || true
           python3 -m pip install --break-system-packages ./ambuild || python3 -m pip install ./ambuild
 
       - name: Build
         working-directory: MapChooser
+        shell: bash
         run: |
+          exec > >(tee -a $GITHUB_WORKSPACE/log.txt) 2>&1
           mkdir build && cd build
           python3 ../configure.py --plugin-name=MapChooser --plugin-alias=map_chooser \
             --hl2sdk-manifests=../hl2sdk-manifests --hl2sdk-root="$GITHUB_WORKSPACE" \
@@ -40,3 +49,14 @@ jobs:
         with:
           name: MapChooser-linux
           path: MapChooser/build/package
+
+      - name: Publish log
+        if: always()
+        run: |
+          cd $GITHUB_WORKSPACE/MapChooser
+          git config --global --add safe.directory '*'
+          git config user.name bot; git config user.email bot@x
+          git checkout --orphan buildlog
+          git rm -rf . -q || true
+          cp $GITHUB_WORKSPACE/log.txt log.txt || echo nolog > log.txt
+          git add log.txt && git commit -qm log && git push -f origin buildlog
