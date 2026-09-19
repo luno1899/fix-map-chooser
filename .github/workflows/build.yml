@@ -23,7 +23,8 @@ jobs:
           git clone --recurse-submodules https://github.com/alliedmodders/metamod-source.git mmsource
           git -C mmsource checkout 465f1a02081996a0eb0665a9fa0189c092a82936  # Metamod:Source 2.0.0-dev build 1411
           git -C mmsource submodule update --init --recursive
-          git clone --depth 1 -b cs2 https://github.com/alliedmodders/hl2sdk.git hl2sdk-cs2
+          git clone -b cs2 https://github.com/alliedmodders/hl2sdk.git hl2sdk-cs2
+          git -C hl2sdk-cs2 checkout $(git -C hl2sdk-cs2 rev-list -n1 --before='2025-10-18' HEAD)  # SDK state SchemaEntity was written against
           git clone --depth 1 https://github.com/alliedmodders/ambuild.git ambuild
 
       - name: Install AMBuild
