@@ -199,9 +199,9 @@ void ChangeLevel()
 			return -1.0f;
 		});
 	} else {
-		g_SMAPI->Format(szBuffer, sizeof(szBuffer), "%s", szMap);
+		g_SMAPI->Format(szBuffer, sizeof(szBuffer), "changelevel %s", szMap);
 		g_pUtils->CreateTimer(g_Settings.iTimeoutBeforeVote, [szBuffer]() {
-			engine->ChangeLevel(szBuffer, nullptr);
+			engine->ServerCommand(szBuffer);
 			return -1.0f;
 		});
 	}
@@ -233,8 +233,17 @@ void FinalizeVote()
 		g_pUtils->PrintToChatAll(GetTranslation("VoteFailed"));
 	}
 	g_iFinalizeVote = iMaxIndex;
+	if(iMaxIndex < 0 && g_bVoteForce) {
+		// никто не выбрал карту - сбрасываем RTV, чтобы можно было начать заново
+		g_bFinalized = false;
+		g_bVoteForce = false;
+		g_bActive = true;
+		g_iLastChange = std::time(nullptr) + g_Settings.iTimeoutStartMap;
+		return;
+	}
 	g_bFinalized = true;
-	if(g_bVoteForce || g_Settings.iType == 0) ChangeLevel();
+	// при rtv_type = 1 карта меняется в конце раунда (OnRoundEnd)
+	if((g_bVoteForce && !g_RTVSettings.bType) || (!g_bVoteForce && g_Settings.iType == 0)) ChangeLevel();
 }
 
 void StartVote(bool bForce = false)
@@ -246,19 +255,11 @@ void StartVote(bool bForce = false)
 		g_iVotes[i] = -1;
 	}
 	g_bActive = false;
-	if(!g_RTVSettings.bType && bForce) {
-		g_pUtils->PrintToChatAll(GetTranslation("VoteStarted"), g_RTVSettings.iVoteTime);
-		g_pUtils->CreateTimer(g_RTVSettings.iVoteTime, [](){
-			FinalizeVote();
-			return -1.0f;
-		});
-	}
-	if(!bForce) {
-		g_pUtils->CreateTimer(g_RTVSettings.iVoteTime, [](){
-			FinalizeVote();
-			return -1.0f;
-		});
-	}
+	if(bForce) g_pUtils->PrintToChatAll(GetTranslation("VoteStarted"), g_RTVSettings.iVoteTime);
+	g_pUtils->CreateTimer(g_RTVSettings.iVoteTime, [](){
+		if(!g_bFinalized) FinalizeVote();
+		return -1.0f;
+	});
 
 	Menu hMenu;
 	g_pMenus->SetTitleMenu(hMenu, GetTranslation("VoteMenuTitle"));
