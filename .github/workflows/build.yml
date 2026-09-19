@@ -21,7 +21,7 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/Pisex/SchemaEntity.git SchemaEntity
           git clone --depth 1 --recurse-submodules https://github.com/alliedmodders/metamod-source.git mmsource
-          git clone --depth 1 -b cs2 https://github.com/Pisex/hl2sdk.git hl2sdk-cs2
+          git clone --depth 1 -b cs2 https://github.com/alliedmodders/hl2sdk.git hl2sdk-cs2
           git clone --depth 1 https://github.com/alliedmodders/ambuild.git ambuild
 
       - name: Install AMBuild
