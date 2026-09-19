@@ -39,7 +39,7 @@ jobs:
           exec > >(tee -a $GITHUB_WORKSPACE/log.txt) 2>&1
           mkdir build && cd build
           python3 ../configure.py --plugin-name=MapChooser --plugin-alias=map_chooser \
-            --hl2sdk-manifests=../hl2sdk-manifests --hl2sdk-root="$GITHUB_WORKSPACE" \
+            --hl2sdk-manifests="$GITHUB_WORKSPACE/MapChooser/hl2sdk-manifests" --hl2sdk-root="$GITHUB_WORKSPACE" \
             --mms_path="$GITHUB_WORKSPACE/mmsource" --sdks=cs2 --targets=x86_64 --enable-optimize
           ambuild
 
