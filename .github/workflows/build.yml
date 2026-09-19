@@ -23,7 +23,8 @@ jobs:
 
       - name: Install AMBuild
         run: |
-          python3 -m pip install ./ambuild || pip3 install ./ambuild
+          (apt-get update && apt-get install -y python3-pip python3-setuptools) || true
+          python3 -m pip install --break-system-packages ./ambuild || python3 -m pip install ./ambuild
 
       - name: Build
         working-directory: MapChooser
