@@ -26,6 +26,7 @@ jobs:
           git clone -b cs2 https://github.com/alliedmodders/hl2sdk.git hl2sdk-cs2
           git -C hl2sdk-cs2 checkout $(git -C hl2sdk-cs2 rev-list -n1 --before='2025-10-18' HEAD)  # SDK state SchemaEntity was written against
           ln -s KeyValues.h hl2sdk-cs2/public/tier1/keyvalues.h
+          sed -i 's/FL_PAWN_FAKECLIENT/FL_FAKECLIENT/g;s/FL_CONTROLLER_FAKECLIENT/FL_FAKECLIENT/g' SchemaEntity/*.h
           sed -i 's/NetworkStateChanged_t/NetworkStateChangedData/g' SchemaEntity/schemasystem.cpp
           git clone --depth 1 https://github.com/alliedmodders/ambuild.git ambuild
 
