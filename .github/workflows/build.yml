@@ -30,8 +30,7 @@ jobs:
         shell: bash
         run: |
           set -x; exec > >(tee -a $GITHUB_WORKSPACE/log.txt) 2>&1; python3 --version
-          (apt-get update && apt-get install -y python3-pip python3-setuptools) || true
-          python3 -m pip install --break-system-packages ./ambuild || python3 -m pip install ./ambuild
+          cd ambuild && python3 setup.py install
 
       - name: Build
         working-directory: MapChooser
