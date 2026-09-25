@@ -43,6 +43,11 @@ int g_iFinalizeVote = -1;
 bool g_bVoteForce = false;
 bool g_bFinalized = false;
 
+// mp_timelimit / mp_maxrounds are tracked through the server_cvar event instead of ConVarRefAbstract:
+// reading ConVarData through the SDK layout crashes on newer game builds (see crash dumps at MapChooser.cpp:507)
+float g_flTimeLimit = 0.0f;
+int g_iMaxRounds = 0;
+
 std::vector<std::pair<std::string, std::string>> g_vecMaps;
 
 CGameEntitySystem* GameEntitySystem()
@@ -439,12 +444,18 @@ void MapChooser::AllPluginsLoaded()
 	g_pUtils->StartupServer(g_PLID, OnStartupServer);
 	if(g_Settings.iType == 2) g_pUtils->HookEvent(g_PLID, "cs_win_panel_match", OnCSWinPanelMatch);
 	
+	g_pUtils->HookEvent(g_PLID, "server_cvar", [](const char* szName, IGameEvent* pEvent, bool bDontBroadcast) {
+		if (!pEvent) return;
+		const char* szCvar = pEvent->GetString("cvarname", "");
+		const char* szValue = pEvent->GetString("cvarvalue", "0");
+		if (!szCvar || !szValue) return;
+		if (!std::strcmp(szCvar, "mp_timelimit")) g_flTimeLimit = (float)std::atof(szValue);
+		else if (!std::strcmp(szCvar, "mp_maxrounds")) g_iMaxRounds = std::atoi(szValue);
+	});
 	g_pUtils->HookEvent(g_PLID, "round_end", OnRoundEnd);
 	g_pUtils->HookEvent(g_PLID, "round_start", [](const char* szName, IGameEvent* pEvent, bool bDontBroadcast) {
 		if (!pEvent) return;
-		ConVarRefAbstract cvMaxRounds("mp_maxrounds");
-		if (!cvMaxRounds.IsValidRef()) return;
-		int iMaxRounds = cvMaxRounds.GetInt();
+		int iMaxRounds = g_iMaxRounds;
 		if (iMaxRounds <= 0 || g_Settings.iTimeEndRounds <= 0) return;
 		CCSGameRules* pRules = g_pUtils->GetCCSGameRules();
 		if (!pRules) return;
@@ -500,10 +511,7 @@ void MapChooser::AllPluginsLoaded()
 
 	if(g_Settings.iTimeEnd > 0) {
 		g_pUtils->CreateTimer(1.0f, [](){
-			// ConVarRefAbstract is resolved on every call: a reference cached in Load() can go stale
-			ConVarRefAbstract cvTimeLimit("mp_timelimit");
-			if(!cvTimeLimit.IsValidRef()) return 1.0f;
-			int iTimeLimit = cvTimeLimit.GetInt();
+			int iTimeLimit = (int)g_flTimeLimit;
 			if(iTimeLimit <= 0) return 1.0f;
 			CCSGameRules* pRules = g_pUtils->GetCCSGameRules();
 			if(!pRules) return 1.0f;
