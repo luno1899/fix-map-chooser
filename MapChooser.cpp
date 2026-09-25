@@ -45,9 +45,6 @@ bool g_bFinalized = false;
 
 std::vector<std::pair<std::string, std::string>> g_vecMaps;
 
-ConVarRefAbstract* mp_timelimit;
-ConVarRefAbstract* mp_maxrounds;
-
 CGameEntitySystem* GameEntitySystem()
 {
 	return g_pUtils->GetCGameEntitySystem();
@@ -102,9 +99,6 @@ bool MapChooser::Load(PluginId id, ISmmAPI* ismm, char* error, size_t maxlen, bo
 	GET_V_IFACE_CURRENT(GetEngineFactory, g_pGameResourceServiceServer, IGameResourceService, GAMERESOURCESERVICESERVER_INTERFACE_VERSION);
 
 	g_SMAPI->AddListener( this, this );
-	
-	mp_timelimit = new ConVarRefAbstract("mp_timelimit");
-	mp_maxrounds = new ConVarRefAbstract("mp_maxrounds");
 	
 	ConVar_Register(FCVAR_GAMEDLL);
 
@@ -448,9 +442,13 @@ void MapChooser::AllPluginsLoaded()
 	g_pUtils->HookEvent(g_PLID, "round_end", OnRoundEnd);
 	g_pUtils->HookEvent(g_PLID, "round_start", [](const char* szName, IGameEvent* pEvent, bool bDontBroadcast) {
 		if (!pEvent) return;
-		if (mp_maxrounds->GetInt() <= 0 || g_Settings.iTimeEndRounds <= 0) return;
-		int iRound = g_pUtils->GetCCSGameRules()->m_totalRoundsPlayed();
-		int iMaxRounds = mp_maxrounds->GetInt();
+		ConVarRefAbstract cvMaxRounds("mp_maxrounds");
+		if (!cvMaxRounds.IsValidRef()) return;
+		int iMaxRounds = cvMaxRounds.GetInt();
+		if (iMaxRounds <= 0 || g_Settings.iTimeEndRounds <= 0) return;
+		CCSGameRules* pRules = g_pUtils->GetCCSGameRules();
+		if (!pRules) return;
+		int iRound = pRules->m_totalRoundsPlayed();
 		if (iRound > 0 && iRound <= iMaxRounds && (iMaxRounds - iRound) <= g_Settings.iTimeEndRounds && g_bActive) StartVote();
 	});
 
@@ -501,14 +499,20 @@ void MapChooser::AllPluginsLoaded()
 	});
 
 	if(g_Settings.iTimeEnd > 0) {
-		g_pUtils->CreateTimer(0.0f, [](){
-			if(mp_timelimit->GetInt() <= 0) return 0.0f;
-			int gameStart = (int)g_pUtils->GetCCSGameRules()->m_flGameStartTime();
-			int timelimit = (int)(mp_timelimit->GetInt() * 60);
+		g_pUtils->CreateTimer(1.0f, [](){
+			// ConVarRefAbstract is resolved on every call: a reference cached in Load() can go stale
+			ConVarRefAbstract cvTimeLimit("mp_timelimit");
+			if(!cvTimeLimit.IsValidRef()) return 1.0f;
+			int iTimeLimit = cvTimeLimit.GetInt();
+			if(iTimeLimit <= 0) return 1.0f;
+			CCSGameRules* pRules = g_pUtils->GetCCSGameRules();
+			if(!pRules) return 1.0f;
+			int gameStart = (int)pRules->m_flGameStartTime();
+			int timelimit = iTimeLimit * 60;
 			int currentTime = (int)g_pUtils->GetCGlobalVars()->curtime;
 			int timeleft = timelimit - (currentTime - gameStart);
 			if(timeleft <= g_Settings.iTimeEnd && timeleft > 0 && g_bActive) StartVote();
-			return 0.0f;
+			return 1.0f;
 		});
 	}
 }
