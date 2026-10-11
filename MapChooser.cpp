@@ -2,6 +2,12 @@
 #include "MapChooser.h"
 #include "metamod_oslink.h"
 
+// Newer libtier0 builds no longer export the string token database hooks, but the SDK's inline CUtlStringToken
+// still references them and the plugin then fails to load ("undefined symbol: g_bUpdateStringTokenDatabase").
+// Provide local fallbacks: libtier0's own definitions still win when they exist.
+extern "C" bool g_bUpdateStringTokenDatabase = false;
+extern "C" void RegisterStringToken(uint32 nHashCode, const char* pStart, const char* pEnd, bool bExtraAddToDatabase) {}
+
 MapChooser g_MapChooser;
 PLUGIN_EXPOSE(MapChooser, g_MapChooser);
 
