@@ -358,7 +358,12 @@ void OnRoundEnd(const char* szName, IGameEvent* pEvent, bool bDontBroadcast)
 	if (!pEvent) return;
 
 	if (!g_bActive) {
-		if(g_bVoteForce && g_RTVSettings.bType && !g_bFinalized) FinalizeVote();
+		if(g_bVoteForce && g_RTVSettings.bType) {
+			// RTV type 1 must both finalize the vote and change the map at round end.
+			// FinalizeVote deliberately does not call ChangeLevel for this mode.
+			if(!g_bFinalized) FinalizeVote();
+			if(g_bFinalized && g_iFinalizeVote >= 0) ChangeLevel();
+		}
 		else if(!g_bVoteForce && g_Settings.iType == 1 && g_bFinalized) {
 			ChangeLevel();
 		}
