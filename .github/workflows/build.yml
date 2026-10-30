@@ -22,7 +22,13 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/Pisex/SchemaEntity.git SchemaEntity
           git clone --recurse-submodules https://github.com/alliedmodders/metamod-source.git mmsource
+          git -C mmsource checkout 7ec0f16
+          git -C mmsource submodule update --init --recursive
           git clone -b cs2 https://github.com/alliedmodders/hl2sdk.git hl2sdk-cs2
+          git -C hl2sdk-cs2 checkout $(git -C hl2sdk-cs2 rev-list -n1 --before='2025-10-18' HEAD)
+          ln -s KeyValues.h hl2sdk-cs2/public/tier1/keyvalues.h
+          sed -i 's/FL_PAWN_FAKECLIENT/FL_FAKECLIENT/g;s/FL_CONTROLLER_FAKECLIENT/FL_FAKECLIENT/g' SchemaEntity/*.h
+          sed -i 's/NetworkStateChanged_t/NetworkStateChangedData/g' SchemaEntity/schemasystem.cpp
           git clone --depth 1 https://github.com/alliedmodders/ambuild.git ambuild
 
       - name: Install AMBuild
@@ -67,9 +73,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.2-${{ github.run_number }}
-          name: MapChooser v1.2 (build ${{ github.run_number }}, Pisex SDK)
+          name: MapChooser v1.2 (build ${{ github.run_number }}, Pisex API)
           body: |
-            Linux x86_64 build using the current SDK/build configuration from Pisex/cs2-map-chooser.
+            Linux x86_64 build using the API headers from Pisex/cs2-map-chooser and its SchemaEntity-compatible HL2SDK revision.
             Fixes RTV round-end map changes and uses ds_workshop_changelevel for Workshop maps.
             Unpack `addons/` into `game/csgo/`.
           files: MapChooser-linux.zip
