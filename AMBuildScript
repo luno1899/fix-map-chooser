@@ -264,8 +264,8 @@ class MMSPluginConfig(object):
 
     cxx.cxxincludes += [
       os.path.join(context.currentSourcePath),
-      os.path.join(mms_core_path),	
-      os.path.join(mms_core_path, 'sourcehook'),
+      os.path.join(mms_core_path),
+      os.path.join(self.mms_root, 'third_party', 'khook', 'include'),
     ]
 
     defines = []
@@ -275,19 +275,11 @@ class MMSPluginConfig(object):
     cxx.defines += ['META_IS_SOURCE2', 'CS2']
     binary.sources += [
       os.path.join(sdk['path'], 'public', 'tier0', 'memoverride.cpp'),
-      os.path.join(sdk['path'], 'public', 'networkvar.cpp'),
-      os.path.join(sdk['path'], 'tier1', 'generichash.cpp'),
       os.path.join(sdk['path'], 'entity2', 'entitysystem.cpp'),
-      os.path.join(sdk['path'], 'entity2', 'entityhandle.cpp'),
-      os.path.join(sdk['path'], 'entity2', 'concreteentitylist.cpp'),
       os.path.join(sdk['path'], 'entity2', 'entityidentity.cpp'),
       os.path.join(sdk['path'], 'entity2', 'entitykeyvalues.cpp'),
-      os.path.join(sdk['path'], 'entity2', 'entitypulse.cpp'),
-      os.path.join(sdk['path'], 'entity2', 'entitypulsecallcontext.cpp'),
-      os.path.join(sdk['path'], 'tier0_perproject', 'convar.cpp'),
-      os.path.join(sdk['path'], 'tier0_perproject', 'convarref.cpp'),
-      os.path.join(sdk['path'], 'tier0_perproject', 'concommandbase.cpp'),
-      os.path.join(sdk['path'], 'kv3lib', 'keyvalues3.cpp'),
+      os.path.join(sdk['path'], 'tier1', 'convar.cpp'),
+      os.path.join(sdk['path'], 'tier1', 'keyvalues3.cpp'),
     ]
 
     SdkHelpers.configureCxx(context, binary, sdk)
