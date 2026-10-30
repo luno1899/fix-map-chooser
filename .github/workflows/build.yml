@@ -49,7 +49,7 @@ jobs:
               exit 1
           fi
           ambuild 2>&1 | tee build.log || {
-            message=$(tail -n 30 build.log | tr '\n' ' ' | sed 's/%/%25/g; s/\r/%0D/g; s/\n/%0A/g')
+            message=$(grep -Ei 'fatal error:|(^|[ :])error:|undefined reference|Build failed' build.log | tail -n 30 | tr '\n' ' ' | sed 's/%/%25/g; s/\r/%0D/g; s/\n/%0A/g')
             echo "::error title=Compile failed::$message"
             exit 1
           }
