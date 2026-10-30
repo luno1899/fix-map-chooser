@@ -11,7 +11,7 @@
 #include <deque>
 #include <functional>
 #include <utlstring.h>
-#include <keyvalues.h>
+#include <KeyValues.h>
 #include "CGameRules.h"
 #include "CCSPlayerController.h"
 #include "include/menus.h"
