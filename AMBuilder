@@ -39,7 +39,7 @@ for sdk_target in MMSPlugin.sdk_targets:
     ]
   binary = MMSPlugin.HL2Library(builder, cxx, MMSPlugin.plugin_name, sdk)
 
-  proto_dir = os.path.join(sdk['path'], 'thirdparty', 'game_protobufs', 'csgo')
+  proto_dir = os.path.join(sdk['path'], 'common')
   binary.custom = [ProtocHeadersOnlyJob(sdk_target.protoc, [
     os.path.join(proto_dir, f) for f in [
       'valveextensions.proto',
