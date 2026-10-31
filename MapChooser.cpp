@@ -197,19 +197,15 @@ void ChangeLevel()
 
 	g_pUtils->PrintToChatAll(GetTranslation("ChangingLevel"), szMap);
 	
-	if(!engine->IsMapValid(szMap)) {
-		g_SMAPI->Format(szBuffer, sizeof(szBuffer), "ds_workshop_changelevel %s", szMap);
-		g_pUtils->CreateTimer(g_Settings.iTimeoutBeforeVote, [szBuffer]() {
-			engine->ServerCommand(szBuffer);
-			return -1.0f;
-		});
-	} else {
-		g_SMAPI->Format(szBuffer, sizeof(szBuffer), "changelevel %s", szMap);
-		g_pUtils->CreateTimer(g_Settings.iTimeoutBeforeVote, [szBuffer]() {
-			engine->ServerCommand(szBuffer);
-			return -1.0f;
-		});
-	}
+	// Workshop maps from host_workshop_collection are resolved and mounted by
+	// the regular changelevel command. ds_workshop_changelevel expects a numeric
+	// Workshop file ID, while maplist.ini intentionally stores map names only.
+	g_SMAPI->Format(szBuffer, sizeof(szBuffer), "changelevel %s", szMap);
+	g_pUtils->CreateTimer(g_Settings.iTimeoutBeforeVote, [szBuffer]() {
+		Msg("[MapChooser] Executing: %s\n", szBuffer);
+		engine->ServerCommand(szBuffer);
+		return -1.0f;
+	});
 }
 
 void FinalizeVote()
