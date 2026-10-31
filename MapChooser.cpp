@@ -188,7 +188,7 @@ void ChangeLevel()
 		return;
 	}
 	
-	char szMap[128];
+	char szCommand[256], szMap[128];
 	if(g_iFinalizeVote >= 0) {
 		g_SMAPI->Format(szMap, sizeof(szMap), "%s", g_vecMaps[g_iFinalizeVote].second.c_str());
 	} else {
@@ -197,12 +197,15 @@ void ChangeLevel()
 
 	g_pUtils->PrintToChatAll(GetTranslation("ChangingLevel"), szMap);
 	
-	// Match Pisex's working Maps module: call the engine's level-change API
-	// directly. Queuing "changelevel" through ServerCommand from a timer can
-	// crash during the map shutdown path.
-	g_pUtils->CreateTimer(g_Settings.iTimeoutBeforeVote, [szMap]() {
-		Msg("[MapChooser] Changing level to: %s\n", szMap);
-		engine->ChangeLevel(szMap, nullptr);
+	// MultiAddonManager cannot switch the primary Workshop addon when
+	// IVEngineServer2::ChangeLevel is called directly. The changelevel console
+	// command resolves the map name through host_workshop_collection and adds
+	// the target Workshop addon to the host-state request.
+	g_SMAPI->Format(szCommand, sizeof(szCommand), "changelevel %s", szMap);
+	g_pUtils->CreateTimer(g_Settings.iTimeoutBeforeVote, [szCommand, szMap]() {
+		Msg("[MapChooser] Executing: %s (IsMapValid=%s)\n", szCommand,
+			engine->IsMapValid(szMap) ? "true" : "false");
+		engine->ServerCommand(szCommand);
 		return -1.0f;
 	});
 }
