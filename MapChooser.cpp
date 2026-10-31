@@ -226,7 +226,11 @@ void ChangeLevel()
 		g_SMAPI->Format(szCommand, sizeof(szCommand), "changelevel %s", szMap);
 	g_pUtils->CreateTimer(g_Settings.iTimeoutBeforeVote, [szCommand, szMap]() {
 		Msg("[MapChooser] Executing: %s (map=%s)\n", szCommand, szMap);
-		engine->ServerCommand(szCommand);
+		std::string command(szCommand);
+		g_pUtils->NextFrame([command]() {
+			Msg("[MapChooser] Dispatching next frame: %s\n", command.c_str());
+			engine->ServerCommand(command.c_str());
+		});
 		return -1.0f;
 	});
 }
