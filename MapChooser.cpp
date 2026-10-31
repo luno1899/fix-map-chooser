@@ -188,7 +188,7 @@ void ChangeLevel()
 		return;
 	}
 	
-	char szBuffer[256], szMap[128];
+	char szMap[128];
 	if(g_iFinalizeVote >= 0) {
 		g_SMAPI->Format(szMap, sizeof(szMap), "%s", g_vecMaps[g_iFinalizeVote].second.c_str());
 	} else {
@@ -197,13 +197,12 @@ void ChangeLevel()
 
 	g_pUtils->PrintToChatAll(GetTranslation("ChangingLevel"), szMap);
 	
-	// Workshop maps from host_workshop_collection are resolved and mounted by
-	// the regular changelevel command. ds_workshop_changelevel expects a numeric
-	// Workshop file ID, while maplist.ini intentionally stores map names only.
-	g_SMAPI->Format(szBuffer, sizeof(szBuffer), "changelevel %s", szMap);
-	g_pUtils->CreateTimer(g_Settings.iTimeoutBeforeVote, [szBuffer]() {
-		Msg("[MapChooser] Executing: %s\n", szBuffer);
-		engine->ServerCommand(szBuffer);
+	// Match Pisex's working Maps module: call the engine's level-change API
+	// directly. Queuing "changelevel" through ServerCommand from a timer can
+	// crash during the map shutdown path.
+	g_pUtils->CreateTimer(g_Settings.iTimeoutBeforeVote, [szMap]() {
+		Msg("[MapChooser] Changing level to: %s\n", szMap);
+		engine->ChangeLevel(szMap, nullptr);
 		return -1.0f;
 	});
 }
