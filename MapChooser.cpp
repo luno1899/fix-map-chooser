@@ -56,6 +56,25 @@ int g_iMaxRounds = 0;
 
 std::vector<std::pair<std::string, std::string>> g_vecMaps;
 
+// Workshop IDs for the maps in the server's collection. The maplist keeps
+// human-readable/internal map names; only the change command needs the ID.
+static const std::map<std::string, std::string> g_WorkshopMapIds = {
+	{"jb_mountaincraft_v6", "3387462501"},
+	{"jb_overcooked", "3393471328"},
+	{"jb_spy_v_spy", "3556036667"},
+	{"jb_summer_xmas_v1", "3378752194"},
+	{"jb_dystopian_b6", "3387861204"},
+	{"jail_xmf_ggez_v2", "3298759214"},
+	{"jb_mario_rescue_v1_2", "3599577537"},
+	{"jb_snow_v2", "3366613008"},
+	{"jb_tropico_v2", "3387429930"},
+	{"jb_killerbeta_xmas", "3375939838"},
+	{"jb_arctic_jail_v3", "3248600903"},
+	{"jb_new_chernobyl", "3387692039"},
+	{"jb_prison_architect", "3296036319"},
+	{"ba_jail_rebellion_fix_cs2", "3661335832"},
+};
+
 CGameEntitySystem* GameEntitySystem()
 {
 	return g_pUtils->GetCGameEntitySystem();
@@ -198,13 +217,15 @@ void ChangeLevel()
 	g_pUtils->PrintToChatAll(GetTranslation("ChangingLevel"), szMap);
 	
 	// MultiAddonManager cannot switch the primary Workshop addon when
-	// IVEngineServer2::ChangeLevel is called directly. The changelevel console
-	// command resolves the map name through host_workshop_collection and adds
-	// the target Workshop addon to the host-state request.
-	g_SMAPI->Format(szCommand, sizeof(szCommand), "changelevel %s", szMap);
+	// IVEngineServer2::ChangeLevel is called directly. Use the Workshop ID for
+	// collection maps; ordinary maps continue to use the regular command.
+	auto workshopMap = g_WorkshopMapIds.find(szMap);
+	if (workshopMap != g_WorkshopMapIds.end())
+		g_SMAPI->Format(szCommand, sizeof(szCommand), "ds_workshop_changelevel %s", workshopMap->second.c_str());
+	else
+		g_SMAPI->Format(szCommand, sizeof(szCommand), "changelevel %s", szMap);
 	g_pUtils->CreateTimer(g_Settings.iTimeoutBeforeVote, [szCommand, szMap]() {
-		Msg("[MapChooser] Executing: %s (IsMapValid=%s)\n", szCommand,
-			engine->IsMapValid(szMap) ? "true" : "false");
+		Msg("[MapChooser] Executing: %s (map=%s)\n", szCommand, szMap);
 		engine->ServerCommand(szCommand);
 		return -1.0f;
 	});
