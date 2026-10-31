@@ -221,7 +221,7 @@ void ChangeLevel()
 	// collection maps; ordinary maps continue to use the regular command.
 	auto workshopMap = g_WorkshopMapIds.find(szMap);
 	if (workshopMap != g_WorkshopMapIds.end())
-		g_SMAPI->Format(szCommand, sizeof(szCommand), "ds_workshop_changelevel %s", workshopMap->second.c_str());
+		g_SMAPI->Format(szCommand, sizeof(szCommand), "host_workshop_map %s", workshopMap->second.c_str());
 	else
 		g_SMAPI->Format(szCommand, sizeof(szCommand), "changelevel %s", szMap);
 	g_pUtils->CreateTimer(g_Settings.iTimeoutBeforeVote, [szCommand, szMap]() {
